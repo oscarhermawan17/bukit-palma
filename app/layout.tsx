@@ -22,9 +22,23 @@ const libreCaslonText = Libre_Caslon_Text({
 });
 
 export const metadata: Metadata = {
-  title: "GKPB Jemaat Tabanan",
+  title: {
+    default: "GKPB Jemaat Tabanan",
+    template: "%s · GKPB Jemaat Tabanan",
+  },
   description:
     "Gereja Kristen Protestan di Bali Jemaat Tabanan. Hadir untuk melayani dan menjadi berkat bagi sesama dalam kasih Kristus.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://bukitpalma.vercel.app"
+  ),
+  openGraph: {
+    siteName: "GKPB Jemaat Tabanan",
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

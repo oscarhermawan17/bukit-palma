@@ -78,7 +78,7 @@ export default function HeroCarousel({ slides }: Props) {
                     src={slide.imageUrl}
                     alt={slide.judul ?? "Slide carousel"}
                     fill
-                    sizes="100vw"
+                    sizes="(max-width: 768px) calc(100vw - 32px), min(calc(100vw - 80px), 1200px)"
                     loading={i === 0 ? "eager" : "lazy"}
                     fetchPriority={i === 0 ? "high" : "auto"}
                     className="object-cover opacity-70"

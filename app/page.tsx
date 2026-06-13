@@ -96,6 +96,34 @@ function urlFor(source: any) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+export async function generateMetadata() {
+  const infoGereja = await fetchInfoGereja()
+  const namaGereja = infoGereja?.namaGereja ?? "GKPB Jemaat Tabanan"
+
+  // Ambil gambar dari slide carousel pertama yang aktif
+  const slideAktif = infoGereja?.slideCarousel?.find((s) => s.aktif)
+  const ogImageUrl = slideAktif?.gambar
+    ? builder.image(slideAktif.gambar).width(1200).height(630).fit("crop").url()
+    : undefined
+
+  return {
+    title: namaGereja,
+    description: `Jadwal ibadah, liturgi, warta jemaat, dan informasi kegiatan ${namaGereja}.`,
+    openGraph: {
+      title: namaGereja,
+      description: `Jadwal ibadah, liturgi, warta jemaat, dan informasi kegiatan ${namaGereja}.`,
+      ...(ogImageUrl && {
+        images: [{ url: ogImageUrl, width: 1200, height: 630, alt: namaGereja }],
+      }),
+    },
+    twitter: {
+      title: namaGereja,
+      description: `Jadwal ibadah, liturgi, warta jemaat, dan informasi kegiatan ${namaGereja}.`,
+      ...(ogImageUrl && { images: [ogImageUrl] }),
+    },
+  }
+}
+
 export default async function Home() {
   const [infoGereja, pengaturan, bank] = await Promise.all([
     fetchInfoGereja(),
