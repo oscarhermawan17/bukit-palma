@@ -1,12 +1,102 @@
-import NavBar from "@/app/components/NavBar";
-import HeroCarousel from "@/app/components/HeroCarousel";
-import IbadahGrid from "@/app/components/IbadahGrid";
+import NavBar from "@/app/components/NavBar"
+import HeroCarousel from "@/app/components/HeroCarousel"
+import IbadahGrid from "@/app/components/IbadahGrid"
+import { client } from "@/sanity/lib/client"
+import imageUrlBuilder from "@sanity/image-url"
 
-export default function Home() {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type Rekening = {
+  _key: string
+  namaBank: string
+  noRekening: string
+  atasNama?: string
+}
+
+type InfoGereja = {
+  namaGereja?: string
+  alamat?: string
+  linkGmaps?: string
+  noTelepon?: string
+  email?: string
+  facebook?: string
+  instagram?: string
+  youtube?: string
+  tiktok?: string
+}
+
+type Bank = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  qris?: any
+  transferBank?: Rekening[]
+}
+
+type Tema = {
+  kataKata?: string
+  pasal?: string
+}
+
+type Pengaturan = {
+  aktifkanQris?: boolean
+  aktifkanTransferBank?: boolean
+  temaBulanan?: Tema
+  temaPersembahan?: Tema
+}
+
+// ─── Sanity fetch ─────────────────────────────────────────────────────────────
+
+const revalidateOpts = {
+  next: { revalidate: process.env.NODE_ENV === "production" ? 60 : 0 },
+}
+
+async function fetchInfoGereja(): Promise<InfoGereja | null> {
+  return client.fetch(`*[_type == "infoGereja"][0]`, {}, revalidateOpts)
+}
+
+async function fetchPengaturan(): Promise<Pengaturan | null> {
+  return client.fetch(`*[_type == "pengaturan"][0]`, {}, revalidateOpts)
+}
+
+async function fetchBank(): Promise<Bank | null> {
+  return client.fetch(`*[_type == "bank"][0]`, {}, revalidateOpts)
+}
+
+// ─── Image URL helper ─────────────────────────────────────────────────────────
+
+const builder = imageUrlBuilder(client)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function urlFor(source: any) {
+  return builder.image(source).url()
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default async function Home() {
+  const [infoGereja, pengaturan, bank] = await Promise.all([
+    fetchInfoGereja(),
+    fetchPengaturan(),
+    fetchBank(),
+  ])
+
+  const namaGereja = infoGereja?.namaGereja ?? "GKPB Tabanan"
+
+  // Persembahan visibility flags
+  const hasAyatPersembahan = !!(
+    pengaturan?.temaPersembahan?.kataKata || pengaturan?.temaPersembahan?.pasal
+  )
+  const hasTransfer = !!(
+    pengaturan?.aktifkanTransferBank !== false && bank?.transferBank?.length
+  )
+  const hasQris = !!(pengaturan?.aktifkanQris !== false && bank?.qris)
+
+  const hasLeft = hasAyatPersembahan || hasTransfer
+  const hasRight = hasQris
+  const showPersembahan = hasLeft || hasRight
+
   return (
     <>
       {/* TopNavBar */}
-      <NavBar />
+      <NavBar namaGereja={namaGereja} />
 
       <main className="pt-20">
         {/* Hero Carousel */}
@@ -22,78 +112,101 @@ export default function Home() {
           <IbadahGrid />
         </section>
 
-        {/* Warta Jemaat Section */}
-        <section className="bg-warm-parchment py-16 border-y border-stone-grey/10">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
-            <h2 className="font-headline-sm text-headline-sm text-primary mb-3">
-              Panduan Liturgi &amp; Warta
-            </h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-8 max-w-xl mx-auto">
-              Dapatkan informasi terbaru seputar pelayanan, kegiatan sepekan, dan panduan liturgi
-              ibadah minggu ini.
-            </p>
-            <a
-              href="#"
-              className="inline-flex items-center gap-3 border-2 border-primary text-primary hover:bg-primary hover:text-on-primary transition-colors duration-300 px-8 py-3 rounded-lg font-label-lg text-label-lg group"
-            >
-              <span className="material-symbols-outlined group-hover:text-on-primary">
-                picture_as_pdf
-              </span>
-              Download Warta Jemaat Minggu Ini
-            </a>
-          </div>
-        </section>
-
         {/* Persembahan Section */}
-        <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-headline-md text-headline-md text-primary mb-4">
-                Persembahan &amp; Syukur
-              </h2>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mb-6">
-                &ldquo;Hendaklah masing-masing memberikan menurut kerelaan hatinya, jangan dengan
-                sedih hati atau karena paksaan, sebab Allah mengasihi orang yang memberi dengan
-                sukacita.&rdquo; &mdash; 2 Korintus 9:7
-              </p>
-              <div className="bg-surface-container-low p-6 rounded-xl border border-stone-grey/15 mb-6">
-                <h4 className="font-label-lg text-label-lg text-on-surface mb-2">Transfer Bank</h4>
-                <p className="font-body-md text-body-md text-stone-grey mb-1">Bank Mandiri</p>
-                <p className="font-headline-sm text-headline-sm text-primary tracking-wide">
-                  145-00-1234567-8
-                </p>
-                <p className="font-body-md text-body-md text-stone-grey mt-1">
-                  a.n. GKPB Jemaat Tabanan
-                </p>
-              </div>
+        {showPersembahan && (
+          <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+            <div
+              className={
+                hasLeft && hasRight
+                  ? "grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+                  : "flex justify-center"
+              }
+            >
+              {/* Left: tema persembahan + transfer bank */}
+              {hasLeft && (
+                <div className={!hasRight ? "w-full max-w-xl" : ""}>
+                  <h2 className="font-headline-md text-headline-md text-primary mb-4">
+                    Persembahan &amp; Syukur
+                  </h2>
+
+                  {hasAyatPersembahan && (
+                    <p className="font-body-lg text-body-lg text-on-surface-variant mb-6">
+                      {pengaturan?.temaPersembahan?.kataKata && (
+                        <>&ldquo;{pengaturan.temaPersembahan.kataKata}&rdquo;</>
+                      )}
+                      {pengaturan?.temaPersembahan?.kataKata &&
+                        pengaturan?.temaPersembahan?.pasal && (
+                          <> &mdash; {pengaturan.temaPersembahan.pasal}</>
+                        )}
+                      {!pengaturan?.temaPersembahan?.kataKata &&
+                        pengaturan?.temaPersembahan?.pasal && (
+                          <>{pengaturan.temaPersembahan.pasal}</>
+                        )}
+                    </p>
+                  )}
+
+                  {hasTransfer && (
+                    <div className="flex flex-col gap-4">
+                      {bank!.transferBank!.map((rek) => (
+                        <div
+                          key={rek._key}
+                          className="bg-surface-container-low p-6 rounded-xl border border-stone-grey/15"
+                        >
+                          <h4 className="font-label-lg text-label-lg text-on-surface mb-2">
+                            Transfer Bank
+                          </h4>
+                          <p className="font-body-md text-body-md text-stone-grey mb-1">
+                            {rek.namaBank}
+                          </p>
+                          <p className="font-headline-sm text-headline-sm text-primary tracking-wide">
+                            {rek.noRekening}
+                          </p>
+                          {rek.atasNama && (
+                            <p className="font-body-md text-body-md text-stone-grey mt-1">
+                              a.n. {rek.atasNama}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Right: QRIS */}
+              {hasRight && (
+                <div
+                  className={`bg-surface-bright p-8 rounded-2xl shadow-sm border border-stone-grey/10 flex flex-col items-center justify-center text-center relative overflow-hidden${!hasLeft ? " w-full max-w-sm" : ""}`}
+                >
+                  {/* Decorative subtle pattern */}
+                  <div
+                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at 2px 2px, #640f1d 1px, transparent 0)",
+                      backgroundSize: "24px 24px",
+                    }}
+                  />
+                  <h3 className="font-headline-sm text-headline-sm text-primary mb-6 relative z-10">
+                    Scan QRIS
+                  </h3>
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-grey/20 mb-6 relative z-10 w-64 h-64">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={urlFor(bank!.qris!)}
+                      alt="QRIS GKPB Tabanan"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  </div>
+                  <p className="font-body-md text-body-md text-on-surface-variant relative z-10">
+                    Gunakan aplikasi M-Banking atau e-Wallet Anda untuk
+                    melakukan pemindaian.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="bg-surface-bright p-8 rounded-2xl shadow-sm border border-stone-grey/10 flex flex-col items-center justify-center text-center relative overflow-hidden">
-              {/* Decorative subtle pattern */}
-              <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 2px 2px, #640f1d 1px, transparent 0)",
-                  backgroundSize: "24px 24px",
-                }}
-              />
-              <h3 className="font-headline-sm text-headline-sm text-primary mb-6 relative z-10">
-                Scan QRIS
-              </h3>
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-grey/20 mb-6 relative z-10 w-64 h-64">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt="QRIS GKPB Tabanan"
-                  className="w-full h-full object-cover rounded-lg"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtHd4jCsu6CLQjgaIF-1vcWVJTzlrqPNE-b_cJt2vtok7N3pj1uj2qLO3uCPWzoD3BUVjCrf5AbiCj99nZhXQSFF6Q6QhSyOKos3x8Kz5LrQbAjCvkOEy4d-rL0uHPbAx2Cgb9HToFefWyOJZJJO12gVZyzJO2UKGdOBBEmUjvef8Fl-cdvCQx0YU1aEUeWKo09vdCRMR1H6Q3010aS8ulhY6zrMM_El5qJsyjXnPKNU-IPgStcvabVAlkFCYBvnNZSG5LczioJ0eA"
-                />
-              </div>
-              <p className="font-body-md text-body-md text-on-surface-variant relative z-10">
-                Gunakan aplikasi M-Banking atau e-Wallet Anda untuk melakukan pemindaian.
-              </p>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Organisasi Section */}
         <section className="bg-warm-parchment py-section-gap border-t border-stone-grey/10">
@@ -129,17 +242,20 @@ export default function Home() {
           {/* Col 1: Brand & Identity */}
           <div className="flex flex-col gap-4">
             <div className="font-headline-md text-headline-md text-secondary-fixed font-bold">
-              GKPB Tabanan
+              {namaGereja}
             </div>
             <p className="text-stone-grey text-sm">
-              Gereja Kristen Protestan di Bali Jemaat Tabanan. Hadir untuk melayani dan menjadi
-              berkat bagi sesama dalam kasih Kristus.
+              Gereja Kristen Protestan di Bali Jemaat Bukit Palma, Sanggulan.
+              Hadir untuk melayani dan menjadi berkat bagi sesama dalam kasih
+              Kristus.
             </p>
           </div>
 
           {/* Col 2: Quick Links */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">Tautan Cepat</h4>
+            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
+              Tautan Cepat
+            </h4>
             <a
               href="#"
               className="text-stone-grey hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100"
@@ -162,36 +278,57 @@ export default function Home() {
 
           {/* Col 3: Contact */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">Hubungi Kami</h4>
-            <p className="text-stone-grey text-sm flex items-start gap-2">
-              <span className="material-symbols-outlined text-[18px]">location_on</span>
-              Jl. Debes No.6, Tabanan, Bali
-            </p>
-            <p className="text-stone-grey text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">call</span>
-              +62 361 223758
-            </p>
-            <a
-              href="https://maps.app.goo.gl/2tgigKRnntmfgc4w5"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-secondary hover:text-secondary-fixed-dim text-sm mt-2 transition-colors inline-flex items-center gap-1"
-            >
-              Lihat Peta
-              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </a>
+            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
+              Hubungi Kami
+            </h4>
+            {infoGereja?.alamat && (
+              <p className="text-stone-grey text-sm flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px]">
+                  location_on
+                </span>
+                {infoGereja.alamat}
+              </p>
+            )}
+            {infoGereja?.noTelepon && (
+              <p className="text-stone-grey text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">
+                  call
+                </span>
+                {infoGereja.noTelepon}
+              </p>
+            )}
+            {infoGereja?.linkGmaps && (
+              <a
+                href={infoGereja.linkGmaps}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary hover:text-secondary-fixed-dim text-sm mt-2 transition-colors inline-flex items-center gap-1"
+              >
+                Lihat Peta
+                <span className="material-symbols-outlined text-[14px]">
+                  arrow_forward
+                </span>
+              </a>
+            )}
           </div>
 
           {/* Col 4: Socials */}
           <div className="flex flex-col gap-3">
-            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">Ikuti Kami</h4>
+            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
+              Ikuti Kami
+            </h4>
             <div className="flex gap-4">
               <a
                 aria-label="YouTube"
                 href="#"
                 className="text-stone-grey hover:text-secondary-fixed transition-colors"
               >
-                <svg className="w-6 h-6" fill="currentColor" aria-hidden="true" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     clipRule="evenodd"
                     fillRule="evenodd"
@@ -204,7 +341,12 @@ export default function Home() {
                 href="#"
                 className="text-stone-grey hover:text-secondary-fixed transition-colors"
               >
-                <svg className="w-6 h-6" fill="currentColor" aria-hidden="true" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     clipRule="evenodd"
                     fillRule="evenodd"
@@ -217,7 +359,12 @@ export default function Home() {
                 href="#"
                 className="text-stone-grey hover:text-secondary-fixed transition-colors"
               >
-                <svg className="w-6 h-6" fill="currentColor" aria-hidden="true" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     clipRule="evenodd"
                     fillRule="evenodd"
@@ -232,11 +379,12 @@ export default function Home() {
         {/* Copyright Bottom */}
         <div className="bg-black py-4 px-margin-mobile md:px-margin-desktop text-center">
           <p className="text-stone-grey text-sm">
-            © 2024 GKPB Jemaat Tabanan. All Rights Reserved.
+            &copy; {new Date().getFullYear()} {namaGereja} Tabanan. Seluruh Hak
+            Cipta Dilindungi Undang-Undang. <br />
+            Dibuat oleh Oscar dan Belen
           </p>
         </div>
       </footer>
     </>
-  );
+  )
 }
-
