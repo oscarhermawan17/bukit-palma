@@ -1,8 +1,9 @@
 import NavBar from "@/app/components/NavBar"
-import HeroCarousel from "@/app/components/HeroCarousel"
+import HeroCarousel, { type HeroSlide } from "@/app/components/HeroCarousel"
 import IbadahGrid from "@/app/components/IbadahGrid"
 import { client } from "@/sanity/lib/client"
 import imageUrlBuilder from "@sanity/image-url"
+import Image from "next/image"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,21 @@ type InfoGereja = {
   instagram?: string
   youtube?: string
   tiktok?: string
+  slideCarousel?: {
+    _key: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    gambar?: any
+    judul?: string
+    subjudul?: string
+    aktif: boolean
+  }[]
+  lembaga?: {
+    _key: string
+    nama: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    gambar?: any
+    url?: string
+  }[]
 }
 
 type Bank = {
@@ -50,7 +66,16 @@ const revalidateOpts = {
 }
 
 async function fetchInfoGereja(): Promise<InfoGereja | null> {
-  return client.fetch(`*[_type == "infoGereja"][0]`, {}, revalidateOpts)
+  return client.fetch(
+    `*[_type == "infoGereja"][0]{
+      ...,
+      slideCarousel[]{ _key, gambar, judul, subjudul, aktif },
+      lembaga[]{ _key, nama, gambar, url } | order(_createdAt asc)
+    }`,
+
+    {},
+    revalidateOpts,
+  )
 }
 
 async function fetchPengaturan(): Promise<Pengaturan | null> {
@@ -80,6 +105,16 @@ export default async function Home() {
 
   const namaGereja = infoGereja?.namaGereja ?? "GKPB Tabanan"
 
+  // Hero carousel slides — only active, with image URL pre-computed
+  const heroSlides: HeroSlide[] = (infoGereja?.slideCarousel ?? [])
+    .filter((s) => s.aktif)
+    .map((s) => ({
+      _key: s._key,
+      imageUrl: s.gambar ? urlFor(s.gambar) : undefined,
+      judul: s.judul,
+      subjudul: s.subjudul,
+    }))
+
   // Persembahan visibility flags
   const hasAyatPersembahan = !!(
     pengaturan?.temaPersembahan?.kataKata || pengaturan?.temaPersembahan?.pasal
@@ -100,7 +135,7 @@ export default async function Home() {
 
       <main className="pt-20">
         {/* Hero Carousel */}
-        <HeroCarousel />
+        <HeroCarousel slides={heroSlides} />
 
         {/* Jadwal Ibadah Section */}
         <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
@@ -191,10 +226,11 @@ export default async function Home() {
                     Scan QRIS
                   </h3>
                   <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-grey/20 mb-6 relative z-10 w-64 h-64">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={urlFor(bank!.qris!)}
-                      alt="QRIS GKPB Tabanan"
+                      alt={`QRIS ${namaGereja}`}
+                      width={224}
+                      height={224}
                       className="w-full h-full object-contain rounded-lg"
                     />
                   </div>
@@ -208,39 +244,63 @@ export default async function Home() {
           </section>
         )}
 
-        {/* Organisasi Section */}
-        <section className="bg-warm-parchment py-section-gap border-t border-stone-grey/10">
-          <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
-            <h2 className="font-headline-md text-headline-md text-primary mb-12">
-              Lembaga &amp; Kategorial
-            </h2>
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-70 hover:opacity-100 transition-opacity duration-500">
-              <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt="GKPB Logo"
-                  className="max-w-full max-h-full object-contain"
-                  src="https://lh3.googleusercontent.com/aida/AP1WRLsc91ur9LzHhoNnIwdx3xplPyZyX0-lR3HF9iPP-4UvR2fyteI6bqztTNAs7Q_qYrhC2TIk1is9-oATViHsevzKcVTkr8WPfvY07fQ0LNemh-l7jbBYUYJ5KdYHlOPDEJMVxOF9ANSStGQg4pNGFqzSX1RF0qBk1cV7bvTdrM_2-N7W8tSmu9htcGm4tfWvwVHeRPArzM2crEzWmfc9948Aco83Z2GONgv7sLXRRtFL4t4OB4LWU6UC5ZqL"
-                />
-              </div>
-              <div className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  alt="GKPB Tabanan Logo"
-                  className="max-w-full max-h-full object-contain rounded-sm"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBauqqvodTZJRaN00iK1BKsTnwQmF86-Uq7JinQuNVo_5X07-NsM4BYULjYcbwQVqaJC3Z8dOBlSUEiYc1kDDrrBKChrDiAOEBqFijzjTbw28LXSQnyXVC8t6MOqwgzi0FzFsloYn65wRV32XAMjkzAJGzrvxCFvACmKvGUBtemZVgwQfbySjErZfHs4RNs9z75ZzUK3S4YATnYhs6o98P2Y2TIMYB5cvwAxz-KwDEVymrP-eIrcSR5GaWYnCPAMcUeEwT0cz7jl-m_"
-                />
+        {/* Lembaga & Kategorial Section */}
+        {infoGereja?.lembaga && infoGereja.lembaga.length > 0 && (
+          <section className="bg-warm-parchment py-section-gap border-t border-stone-grey/10">
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+              <h2 className="font-headline-md text-headline-md text-primary mb-12">
+                Lembaga &amp; Kategorial
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12">
+                {infoGereja.lembaga.map((item) => {
+                  const content = (
+                    <div className="relative flex items-center justify-center w-full h-full group">
+                      <Image
+                        src={urlFor(item.gambar)}
+                        alt={item.nama}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        fetchPriority="low"
+                        className="object-contain"
+                      />
+                      <span className="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <span className="bg-deep-ebony/70 text-warm-parchment text-xs font-label-sm px-2 py-1 rounded">
+                          {item.nama}
+                        </span>
+                      </span>
+                    </div>
+                  )
+                  return (
+                    <div
+                      key={item._key}
+                      className="flex items-center justify-center h-32 md:h-40"
+                    >
+                      {item.url ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-full h-full"
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        content
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       {/* Footer */}
       <footer className="bg-deep-ebony dark:bg-black w-full text-secondary-fixed font-body-md text-body-md">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-section-gap max-w-container-max mx-auto border-b border-stone-grey/20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter px-margin-mobile md:px-margin-desktop py-section-gap max-w-container-max mx-auto border-b border-stone-grey/20">
           {/* Col 1: Brand & Identity */}
-          <div className="flex flex-col gap-4">
+          <div className="md:col-span-4 flex flex-col gap-4">
             <div className="font-headline-md text-headline-md text-secondary-fixed font-bold">
               {namaGereja}
             </div>
@@ -251,33 +311,8 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Col 2: Quick Links */}
-          <div className="flex flex-col gap-3">
-            <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
-              Tautan Cepat
-            </h4>
-            <a
-              href="#"
-              className="text-stone-grey hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="#"
-              className="text-stone-grey hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100"
-            >
-              Terms of Service
-            </a>
-            <a
-              href="#"
-              className="text-stone-grey hover:text-secondary-fixed-dim transition-colors opacity-80 hover:opacity-100"
-            >
-              Member Portal
-            </a>
-          </div>
-
-          {/* Col 3: Contact */}
-          <div className="flex flex-col gap-3">
+          {/* Col 2: Contact */}
+          <div className="md:col-span-5 flex flex-col gap-3">
             <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
               Hubungi Kami
             </h4>
@@ -312,8 +347,11 @@ export default async function Home() {
             )}
           </div>
 
+          {/* Col 3: Spacer */}
+          <div className="hidden md:block md:col-span-1" />
+
           {/* Col 4: Socials */}
-          <div className="flex flex-col gap-3">
+          <div className="md:col-span-2 flex flex-col gap-3">
             <h4 className="font-label-lg text-label-lg text-warm-parchment mb-2">
               Ikuti Kami
             </h4>

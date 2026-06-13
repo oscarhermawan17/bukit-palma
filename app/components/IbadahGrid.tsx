@@ -9,6 +9,7 @@ type IbadahItem = {
   linkLokasi?: string
   tema?: string
   pembawakhotbah?: string
+  tuanRumah?: string
   wartaUrl?: string
 }
 
@@ -27,7 +28,7 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
 async function fetchIbadah(): Promise<IbadahItem[]> {
   const data = await client.fetch(
     `*[_type == "ibadah" && tampilDiHomepage == true && waktu >= now()] | order(waktu asc) {
-      _id, tipe, namaKhusus, waktu, lokasi, linkLokasi, tema, pembawakhotbah, "wartaUrl": wartaPdf.asset->url
+      _id, tipe, namaKhusus, waktu, lokasi, linkLokasi, tema, pembawakhotbah, tuanRumah, "wartaUrl": wartaPdf.asset->url
     }`,
     {},
     { next: { revalidate: process.env.NODE_ENV === "production" ? 60 : 0 } },
@@ -94,6 +95,12 @@ function IbadahCard({
             {item.pembawakhotbah}
           </p>
         )}
+        {item.tuanRumah && (
+          <p className="font-body-md text-body-md text-stone-grey mt-1">
+            <span className="font-semibold text-on-surface">Tuan Rumah:</span>{" "}
+            {item.tuanRumah}
+          </p>
+        )}
         {item.tema && (
           <p className="font-body-md text-body-md text-stone-grey italic mt-1">
             &ldquo;{item.tema}&rdquo;
@@ -111,7 +118,7 @@ function IbadahCard({
             <span className="material-symbols-outlined text-stone-grey group-hover:text-primary text-[20px]">
               location_on
             </span>
-            <span className="underline underline-offset-2">{item.lokasi}</span>
+            <span>{item.lokasi}</span>
           </a>
         ) : (
           <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 mb-4">
@@ -132,7 +139,7 @@ function IbadahCard({
             <span className="material-symbols-outlined text-[18px]">
               download
             </span>
-            Download Warta
+            Download Liturga / Warta
           </a>
         )}
       </div>

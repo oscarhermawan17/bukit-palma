@@ -1,66 +1,59 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 
-const slides = [
-  {
-    src: "https://lh3.googleusercontent.com/aida/AP1WRLsLOIyNcgivRZ2nf0SvIGbAyZFb32eJycEuiZsVHzDYM7ETXQd_Vwdh-IiNvCdknvbRZT7xBIGP7cVuju2048YdvZj1BazNsBLdyk1O4lJIS9iqtI1vvt1nv5l59zGjtat3kruaHzBCb8_E7PTQo151O6UymjpF_Oj7M3z9HXx4P-nFPi2HfF0BJ6jFViJctAegA82I6W9d72u2vfV-ysNURs9p1OQimeBPvdUw4Wia5_a5eZPK242LP_uD",
-    alt: "Gereja Interior",
-    title: "Shalom & Selamat Datang",
-    subtitle: "GKPB Jemaat Tabanan",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida/AP1WRLvCoYR2sZtIQ4FSIhRqtZOaIbXXwVw9887dNoB1_PNogA1IthYFDTIjGg1RSdPSlxcnEZUO8pC062dmCVoc6IyazEs_JccddaN_6s1P9GoaWUTZlnUkYVZaf2W9CD7QCg2kGjS1i1MC0MwWkntK5mW6cJ0RMEFwKsQwkdIbaEYwrJwqiofSKzirH3HStkRzxznf54W-g1irKAsK0CPLXidfCldyROp-hpAcvHg1XvkLDw55wdj2wuAGMvPf",
-    alt: "Symbolic Dove",
-    title: "Damai Sejahtera Bertahta",
-    subtitle: "Membangun Komunitas dalam Kasih",
-  },
-  {
-    src: "https://lh3.googleusercontent.com/aida/AP1WRLtt5pBMUqfM8xRHuX4V6xULLLq_h6Tdd32KqHa-rjwuI-E4YpsEthrkqSEUP5thGY3RUhTMiPEEHgrPjywy2oC_wRT_yrVq2kGCRYhcjO7ARWStopESa-trW3S4lpiJfp96TB--8WV7fY-BvPlV7yDXPOM3QOhvZLftxqOM7QL1CZbUbU8yh_jQbUE2SaBi8NQf8sS93T2bet-SNGxn_9otcol97RYT1RQf5dn3MaJrMMHVDf2IhK2AxYF-",
-    alt: "Community",
-    title: "Melayani Sesama",
-    subtitle: "Hadir Untuk Memberkati",
-  },
-];
+export type HeroSlide = {
+  _key: string
+  imageUrl?: string
+  judul?: string
+  subjudul?: string
+}
 
-export default function HeroCarousel() {
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+type Props = {
+  slides: HeroSlide[]
+}
+
+export default function HeroCarousel({ slides }: Props) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
+    const carousel = carouselRef.current
+    if (!carousel) return
 
     const handleScroll = () => {
-      const slideWidth = carousel.offsetWidth;
-      if (slideWidth === 0) return;
-      const newIndex = Math.round(carousel.scrollLeft / slideWidth);
-      setCurrentIndex(newIndex);
-    };
+      const slideWidth = carousel.offsetWidth
+      if (slideWidth === 0) return
+      const newIndex = Math.round(carousel.scrollLeft / slideWidth)
+      setCurrentIndex(newIndex)
+    }
 
-    carousel.addEventListener("scroll", handleScroll, { passive: true });
+    carousel.addEventListener("scroll", handleScroll, { passive: true })
 
     const interval = setInterval(() => {
-      if (!carouselRef.current) return;
-      const next = (currentIndex + 1) % slides.length;
+      if (!carouselRef.current) return
+      const next = (currentIndex + 1) % slides.length
       carouselRef.current.scrollTo({
         left: next * carouselRef.current.offsetWidth,
         behavior: "smooth",
-      });
-    }, 5000);
+      })
+    }, 5000)
 
     return () => {
-      carousel.removeEventListener("scroll", handleScroll);
-      clearInterval(interval);
-    };
-  }, [currentIndex]);
+      carousel.removeEventListener("scroll", handleScroll)
+      clearInterval(interval)
+    }
+  }, [currentIndex, slides.length])
 
   const goToSlide = (index: number) => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-    carousel.scrollTo({ left: index * carousel.offsetWidth, behavior: "smooth" });
-    setCurrentIndex(index);
-  };
+    const carousel = carouselRef.current
+    if (!carousel) return
+    carousel.scrollTo({ left: index * carousel.offsetWidth, behavior: "smooth" })
+    setCurrentIndex(index)
+  }
+
+  if (slides.length === 0) return null
 
   return (
     <section className="py-section-gap px-margin-mobile md:px-margin-desktop">
@@ -73,22 +66,32 @@ export default function HeroCarousel() {
             className="flex w-full h-full snap-x snap-mandatory overflow-x-auto hide-scrollbar"
           >
             {slides.map((slide, i) => (
-              <div key={i} className="w-full h-full shrink-0 snap-start relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={slide.src}
-                  alt={slide.alt}
-                  className="absolute inset-0 w-full h-full object-cover opacity-70"
-                />
+              <div key={slide._key} className="w-full h-full shrink-0 snap-start relative">
+                {slide.imageUrl && (
+                  <Image
+                    src={slide.imageUrl}
+                    alt={slide.judul ?? "Slide carousel"}
+                    fill
+                    sizes="100vw"
+                    loading="lazy"
+                    className="object-cover opacity-70"
+                  />
+                )}
                 <div className="absolute inset-0 bg-linear-to-t from-deep-ebony/90 via-deep-ebony/40 to-transparent" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-margin-mobile md:px-margin-desktop">
-                  <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-secondary-fixed mb-4 drop-shadow-md">
-                    {slide.title}
-                  </h1>
-                  <p className="font-headline-sm text-headline-sm text-warm-parchment">
-                    {slide.subtitle}
-                  </p>
-                </div>
+                {(slide.judul || slide.subjudul) && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-margin-mobile md:px-margin-desktop">
+                    {slide.judul && (
+                      <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-secondary-fixed mb-4 drop-shadow-md">
+                        {slide.judul}
+                      </h1>
+                    )}
+                    {slide.subjudul && (
+                      <p className="font-headline-sm text-headline-sm text-warm-parchment">
+                        {slide.subjudul}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -129,5 +132,5 @@ export default function HeroCarousel() {
         </div>
       </div>
     </section>
-  );
+  )
 }

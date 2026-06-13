@@ -1,5 +1,6 @@
 import { defineField, defineType } from "sanity"
 import { LokasiUrlInput } from "../components/LokasiUrlInput"
+import { WitaDatetimeInput } from "../components/WitaDatetimeInput"
 
 const TIPE_KATEGORIAL = [
   "kaumBapak",
@@ -57,6 +58,9 @@ export const ibadah = defineType({
         dateFormat: "DD MMMM YYYY",
         timeFormat: "HH:mm",
         timeStep: 15,
+      },
+      components: {
+        input: WitaDatetimeInput,
       },
       validation: (Rule) => Rule.required(),
     }),

@@ -1,4 +1,4 @@
-import { defineField, defineType } from "sanity"
+import { defineArrayMember, defineField, defineType } from "sanity"
 
 export const infoGereja = defineType({
   name: "infoGereja",
@@ -86,6 +86,106 @@ export const infoGereja = defineType({
         Rule.uri({ scheme: ["http", "https"] }).error(
           "Harus berupa URL yang valid",
         ),
+    }),
+
+    // ─── Hero Carousel ───────────────────────────────────────────
+    defineField({
+      name: "slideCarousel",
+      title: "Slide Hero Carousel",
+      type: "array",
+      description: "Slide yang ditampilkan di bagian atas halaman utama",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "slide",
+          title: "Slide",
+          fields: [
+            defineField({
+              name: "gambar",
+              title: "Gambar",
+              type: "image",
+              options: { hotspot: true },
+            }),
+            defineField({
+              name: "judul",
+              title: "Judul",
+              type: "string",
+            }),
+            defineField({
+              name: "subjudul",
+              title: "Sub Judul",
+              type: "string",
+            }),
+            defineField({
+              name: "aktif",
+              title: "Aktif",
+              type: "boolean",
+              initialValue: true,
+            }),
+          ],
+          preview: {
+            select: {
+              title: "judul",
+              subtitle: "subjudul",
+              media: "gambar",
+            },
+            prepare({ title, subtitle, media }) {
+              return {
+                title: title ?? "(Tanpa Judul)",
+                subtitle,
+                media,
+              }
+            },
+          },
+        }),
+      ],
+    }),
+
+    // ─── Lembaga & Kategorial ────────────────────────────────────
+    defineField({
+      name: "lembaga",
+      title: "Lembaga & Kategorial",
+      type: "array",
+      description: "Upload logo/foto lembaga dan kategorial gereja",
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "itemLembaga",
+          title: "Lembaga",
+          fields: [
+            defineField({
+              name: "nama",
+              title: "Nama Lembaga",
+              type: "string",
+              description: "Dipakai sebagai alt text gambar",
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "gambar",
+              title: "Gambar / Logo",
+              type: "image",
+              options: { hotspot: false },
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "url",
+              title: "URL (opsional)",
+              type: "url",
+              description: "Link redirect ke halaman lembaga tersebut",
+              validation: (Rule) =>
+                Rule.uri({ scheme: ["http", "https"] }).error(
+                  "Harus berupa URL yang valid",
+                ),
+            }),
+          ],
+          preview: {
+            select: {
+              title: "nama",
+              media: "gambar",
+            },
+          },
+        }),
+      ],
     }),
   ],
 
