@@ -49,7 +49,10 @@ export default function HeroCarousel({ slides }: Props) {
   const goToSlide = (index: number) => {
     const carousel = carouselRef.current
     if (!carousel) return
-    carousel.scrollTo({ left: index * carousel.offsetWidth, behavior: "smooth" })
+    carousel.scrollTo({
+      left: index * carousel.offsetWidth,
+      behavior: "smooth",
+    })
     setCurrentIndex(index)
   }
 
@@ -59,34 +62,40 @@ export default function HeroCarousel({ slides }: Props) {
     <section className="py-section-gap px-margin-mobile md:px-margin-desktop">
       <div className="max-w-container-max mx-auto">
         {/* Carousel wrapper */}
-        <div className="relative rounded-2xl overflow-hidden h-[60vh] bg-deep-ebony">
+        <div className="relative rounded-2xl overflow-hidden aspect-[4/5] md:aspect-[2/1] bg-deep-ebony">
           {/* Carousel Container */}
           <div
             ref={carouselRef}
             className="flex w-full h-full snap-x snap-mandatory overflow-x-auto hide-scrollbar"
           >
             {slides.map((slide, i) => (
-              <div key={slide._key} className="w-full h-full shrink-0 snap-start relative">
+              <div
+                key={slide._key}
+                className="w-full h-full shrink-0 snap-start relative"
+              >
                 {slide.imageUrl && (
                   <Image
                     src={slide.imageUrl}
                     alt={slide.judul ?? "Slide carousel"}
                     fill
                     sizes="100vw"
-                    loading="lazy"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    fetchPriority={i === 0 ? "high" : "auto"}
                     className="object-cover opacity-70"
                   />
                 )}
                 <div className="absolute inset-0 bg-linear-to-t from-deep-ebony/90 via-deep-ebony/40 to-transparent" />
                 {(slide.judul || slide.subjudul) && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-margin-mobile md:px-margin-desktop">
+                  <div
+                    className={`absolute inset-0 flex flex-col text-center px-margin-mobile md:px-margin-desktop ${slide.imageUrl ? "items-center justify-end pb-16" : "items-center justify-center"}`}
+                  >
                     {slide.judul && (
-                      <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-secondary-fixed mb-4 drop-shadow-md">
+                      <h1 className="font-headline-sm md:font-display-lg text-headline-sm md:text-display-lg text-secondary-fixed mb-4 drop-shadow-md">
                         {slide.judul}
                       </h1>
                     )}
                     {slide.subjudul && (
-                      <p className="font-headline-sm text-headline-sm text-warm-parchment">
+                      <p className="font-headline-sm text-body-lg md:text-headline-sm text-warm-parchment">
                         {slide.subjudul}
                       </p>
                     )}
@@ -98,7 +107,9 @@ export default function HeroCarousel({ slides }: Props) {
 
           {/* Prev Button */}
           <button
-            onClick={() => goToSlide((currentIndex - 1 + slides.length) % slides.length)}
+            onClick={() =>
+              goToSlide((currentIndex - 1 + slides.length) % slides.length)
+            }
             aria-label="Slide sebelumnya"
             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-deep-ebony/50 hover:bg-deep-ebony/80 text-secondary-fixed backdrop-blur-sm transition-all duration-200"
           >

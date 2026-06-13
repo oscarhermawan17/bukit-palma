@@ -2,7 +2,7 @@ import NavBar from "@/app/components/NavBar"
 import HeroCarousel, { type HeroSlide } from "@/app/components/HeroCarousel"
 import IbadahGrid from "@/app/components/IbadahGrid"
 import { client } from "@/sanity/lib/client"
-import imageUrlBuilder from "@sanity/image-url"
+import { createImageUrlBuilder } from "@sanity/image-url"
 import Image from "next/image"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ async function fetchBank(): Promise<Bank | null> {
 
 // ─── Image URL helper ─────────────────────────────────────────────────────────
 
-const builder = imageUrlBuilder(client)
+const builder = createImageUrlBuilder(client)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function urlFor(source: any) {
   return builder.image(source).url()

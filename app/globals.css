@@ -7,14 +7,14 @@
   --color-on-error: #ffffff;
   --color-on-secondary-container: #755c00;
   --color-surface-tint: #a03d47;
-  --color-warm-parchment: #F9F7F2;
+  --color-warm-parchment: #f9f7f2;
   --color-surface-variant: #e4e2e1;
   --color-secondary-fixed-dim: #e9c257;
   --color-on-background: #1b1c1c;
   --color-secondary: #755b00;
-  --color-terracotta: #B35C44;
+  --color-terracotta: #b35c44;
   --color-surface-bright: #fcf9f8;
-  --color-deep-ebony: #0F172A;
+  --color-deep-ebony: #0f172a;
   --color-on-error-container: #93000a;
   --color-surface: #fcf9f8;
   --color-on-tertiary-fixed: #082100;
@@ -31,7 +31,7 @@
   --color-on-primary-fixed-variant: #812531;
   --color-surface-container-lowest: #ffffff;
   --color-secondary-fixed: #ffe08f;
-  --color-stone-grey: #6B7280;
+  --color-stone-grey: #6b7280;
   --color-on-primary-fixed: #40000c;
   --color-on-tertiary-fixed-variant: #2b4f17;
   --color-on-primary: #ffffff;
@@ -66,13 +66,14 @@
   --spacing-container-max: 1200px;
   --spacing-margin-mobile: 16px;
   --spacing-base: 8px;
-  --spacing-section-gap: 80px;
+  --spacing-section-gap: 40px;
 
   /* Font families */
   --font-body-md: var(--font-source-sans-3), "Source Sans 3", sans-serif;
   --font-label-sm: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
   --font-body-lg: var(--font-source-sans-3), "Source Sans 3", sans-serif;
-  --font-display-lg-mobile: var(--font-libre-caslon-text), "Libre Caslon Text", serif;
+  --font-display-lg-mobile:
+    var(--font-libre-caslon-text), "Libre Caslon Text", serif;
   --font-headline-sm: var(--font-libre-caslon-text), "Libre Caslon Text", serif;
   --font-headline-md: var(--font-libre-caslon-text), "Libre Caslon Text", serif;
   --font-label-lg: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
@@ -99,7 +100,11 @@
 
 /* Material Symbols */
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
