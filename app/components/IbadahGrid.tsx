@@ -23,14 +23,25 @@ const TIPE_LABEL: Record<string, string> = {
   kebaktianKeluarga: "Kebaktian Keluarga",
 }
 
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+// Hitung awal hari ini (00:00:00 WITA) dalam UTC
+// WITA = UTC+8, jadi midnight WITA = UTC-8jam dari midnight WITA
+function getStartOfTodayWITA(): string {
+  const now = new Date()
+  const offset = 8 * 60 * 60 * 1000 // UTC+8 dalam ms
+  const witaNow = new Date(now.getTime() + offset)
+  const startOfTodayUTC = new Date(
+    Date.UTC(witaNow.getUTCFullYear(), witaNow.getUTCMonth(), witaNow.getUTCDate()) - offset
+  )
+  return startOfTodayUTC.toISOString()
+}
 
 async function fetchIbadah(): Promise<IbadahItem[]> {
+  const startOfToday = getStartOfTodayWITA()
   const data = await client.fetch(
-    `*[_type == "ibadah" && tampilDiHomepage == true && waktu >= now()] | order(waktu asc) {
+    `*[_type == "ibadah" && tampilDiHomepage == true && waktu >= $startOfToday] | order(waktu asc) {
       _id, tipe, namaKhusus, waktu, lokasi, linkLokasi, tema, pembawakhotbah, tuanRumah, "wartaUrl": wartaPdf.asset->url
     }`,
-    {},
+    { startOfToday },
     { next: { revalidate: process.env.NODE_ENV === "production" ? 60 : 0 } },
   )
   return data

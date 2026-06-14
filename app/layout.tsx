@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hanken_Grotesk, Libre_Caslon_Text, Source_Sans_3 } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const sourceSans3 = Source_Sans_3({
@@ -20,6 +21,7 @@ const libreCaslonText = Libre_Caslon_Text({
   weight: ["400", "700"],
   style: ["normal", "italic"],
 });
+
 
 export const metadata: Metadata = {
   title: {
@@ -51,14 +53,15 @@ export default function RootLayout({
       lang="id"
       className={`${sourceSans3.variable} ${hankenGrotesk.variable} ${libreCaslonText.variable}`}
     >
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body className="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
         {children}
+        <Script
+          id="material-symbols"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=optional';document.head.appendChild(l)})()`,
+          }}
+        />
       </body>
     </html>
   );

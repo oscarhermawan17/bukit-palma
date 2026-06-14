@@ -89,9 +89,12 @@ async function fetchBank(): Promise<Bank | null> {
 // ─── Image URL helper ─────────────────────────────────────────────────────────
 
 const builder = createImageUrlBuilder(client)
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function urlFor(source: any) {
-  return builder.image(source).url()
+function urlFor(source: any, width?: number) {
+  let b = builder.image(source).auto("format")
+  if (width) b = b.width(width)
+  return b.url()
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -138,7 +141,7 @@ export default async function Home() {
     .filter((s) => s.aktif)
     .map((s) => ({
       _key: s._key,
-      imageUrl: s.gambar ? urlFor(s.gambar) : undefined,
+      imageUrl: s.gambar ? urlFor(s.gambar, 1600) : undefined,
       judul: s.judul,
       subjudul: s.subjudul,
     }))
@@ -255,7 +258,7 @@ export default async function Home() {
                   </h3>
                   <div className="bg-white p-4 rounded-xl shadow-sm border border-stone-grey/20 mb-6 relative z-10 w-64 h-64">
                     <Image
-                      src={urlFor(bank!.qris!)}
+                      src={urlFor(bank!.qris!, 400)}
                       alt={`QRIS ${namaGereja}`}
                       width={224}
                       height={224}
@@ -284,7 +287,7 @@ export default async function Home() {
                   const content = (
                     <div className="relative flex items-center justify-center w-full h-full group">
                       <Image
-                        src={urlFor(item.gambar)}
+                        src={urlFor(item.gambar, 400)}
                         alt={item.nama}
                         fill
                         sizes="(max-width: 768px) 50vw, 33vw"
