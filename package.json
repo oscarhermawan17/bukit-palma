@@ -15,9 +15,11 @@
     "next-sanity": "^13.0.11",
     "react": "^19",
     "react-dom": "^19",
-    "sanity": "^5.30.0"
+    "sanity": "^5.30.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.9",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22",
     "@types/react": "^19",
